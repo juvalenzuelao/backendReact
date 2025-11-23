@@ -1,17 +1,21 @@
-# Usar Java 21
-FROM eclipse-temurin:21-jdk-jammy
+FROM eclipse-temurin:21-jdk-alpine
 
-# Carpeta de trabajo dentro del contenedor
 WORKDIR /app
 
-# Copiar todos los archivos del proyecto al contenedor
-COPY . .
+COPY .mvn/ .mvn
+COPY mvnw pom.xml ./
 
-# Compilar el proyecto usando Maven Wrapper (sin tests para acelerar)
+RUN chmod +x mvnw
+
+RUN ./mvnw dependency:go-offline
+
+COPY src ./src
+
 RUN ./mvnw clean package -DskipTests
 
-# Exponer el puerto que usa Spring Boot
+# Copia el jar generado con nombre dinámico
+RUN cp target/*.jar app.jar
+
 EXPOSE 8080
 
-# Ejecutar la app con el JAR generado
-CMD ["java", "-jar", "target/backend-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "app.jar"]
